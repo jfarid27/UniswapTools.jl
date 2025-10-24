@@ -2,27 +2,27 @@ module Types
     export @UniswapV2Position, UniswapV2PriceTarget, UniswapV2ReservesTarget, UniswapV2Reserves
 
     # allowed keys
-    const ALLOWED = Set([:poolTokenAmount, :poolDollarAmount, :targetPrice])
+    const ALLOWED = Set([:price, :totalCapital, :poolTokenAmount, :poolDollarAmount, :targetPrice])
 
     # concrete struct for the full set
-    struct UniswapV2ReservesTarget{Ttok<:Real, Tdol<:Real, TCap<:Real, Tpx<:Real}
-        poolTokenAmount  :: Ttok
+    struct UniswapV2ReservesTarget{Tdol<:Real, Ttok<:Real, TCap<:Real, Tpx<:Real}
         poolDollarAmount :: Tdol
-        totalCapital     :: TCap
+        poolTokenAmount  :: Ttok
         price            :: Tpx
-    end
-
-    struct UniswapV2PriceTarget{Ttok<:Real, Tdol<:Real, Tpx<:Real}
-        poolTokenAmount  :: Ttok
-        poolDollarAmount :: Tdol
-        targetPrice      :: Tpx
-    end
-
-    struct UniswapV2Reserves{Tdol<:Real, Ttok<:Real, TCap<:Real, Tpx<:Real}
-        poolDollarAmount :: Tdol
-        poolTokenAmount  :: Ttok
         totalCapital     :: TCap
+    end
+
+    struct UniswapV2PriceTarget{Tdol<:Real, Ttok<:Real, Tpx<:Real}
+        poolDollarAmount :: Tdol
+        poolTokenAmount  :: Ttok
         targetPrice      :: Tpx
+    end
+
+    struct UniswapV2Reserves{Tdol<:Real, Ttok<:Real, Tpx<:Real, TCap<:Real}
+        poolDollarAmount :: Tdol
+        poolTokenAmount  :: Ttok
+        price            :: Tpx
+        totalCapital     :: TCap
     end
 
     # validate + canonicalize to a NamedTuple with sorted keys
@@ -65,16 +65,16 @@ module Types
             if $(keys_sym) === $priceTargetK
                 # build UniswapV2PriceTarget
                 $mod.UniswapV2PriceTarget(
-                    getproperty($(nt_sym), :poolTokenAmount),
                     getproperty($(nt_sym), :poolDollarAmount),
+                    getproperty($(nt_sym), :poolTokenAmount),
                     getproperty($(nt_sym), :targetPrice),
                 )
     
             elseif $(keys_sym) === $reservesTargetK
                 # build UniswapV2ReservesTarget
                 $mod.UniswapV2ReservesTarget(
-                    getproperty($(nt_sym), :poolTokenAmount),
                     getproperty($(nt_sym), :poolDollarAmount),
+                    getproperty($(nt_sym), :poolTokenAmount),
                     getproperty($(nt_sym), :price),
                     getproperty($(nt_sym), :totalCapital),
                 )

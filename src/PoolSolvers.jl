@@ -8,42 +8,24 @@ module PoolSolvers
     """Liquidity Position target given current reserves and the current price."""
     function UniswapV2PoolPositionState(
         state::UniswapV2ReservesTarget{Ttok,Tdol,TCap,Tpx}
-    ) where {Ttok<:Real,Tdol<:Real,TCap<:Real,Tpx<:Real}
+    )::UniswapV2Reserves where {Ttok<:Real,Tdol<:Real,TCap<:Real,Tpx<:Real}
 
-        @variables  amount_token  amount_dollar pool_constant
-        @parameters target_price total_capital
+        @variables  amount_token  amount_dollar
 
         eqs = [
-            pool_constant ~ amount_dollar * amount_token,
-            target_price  ~ amount_dollar / amount_token,
-            total_capital ~ amount_dollar + amount_token * target_price
+            state.totalCapital ~ (amount_dollar + amount_token * state.price),
+            state.price * amount_token ~ amount_dollar
         ]
 
-        subs = Dict(
-            target_price  => state.targetPrice,
-            total_capital => state.totalCapital
-        )
-        eqs_sub = Symbolics.substitute.(eqs, Ref(subs))
+        sol = symbolic_linear_solve(eqs, [amount_dollar, amount_token])
 
-        @named sys = NonlinearSystem(eqs_sub, [amount_dollar, amount_token, pool_constant], [])
-        sys_simpl = structural_simplify(sys)
 
-        # Initial guess from the provided state
-        u0 = [
-            amount_dollar => state.poolDollarAmount,
-            amount_token  => state.poolTokenAmount,
-        ]
+        newAmountDollar = sol[1]
+        newAmountToken  = sol[2]
+        newTargetPrice  = newAmountDollar / newAmountToken
+        newTotalCapital = sol[1] + sol[2] * (newTargetPrice) 
 
-        prob = NonlinearProblem(sys_simpl, u0)
-        sol  = solve(prob, NewtonRaphson())
-
-        newAmountDollar = sol[amount_dollar]
-        newAmountToken  = sol[amount_token]
-        newTotalCapital = sol[pool_constant]
-        newTargetPrice  = sol[target_price]
-
-        return UniswapV2Reserves(newAmountDollar, newAmountToken, newTotalCapital, newTargetPrice)
-
+        return UniswapV2Reserves(newAmountDollar, newAmountToken, newTargetPrice, newTotalCapital)
 
     end
 
@@ -51,7 +33,7 @@ module PoolSolvers
     """
     function UniswapV2PoolPositionState(
         state::UniswapV2PriceTarget{Ttok,Tdol,Tpx}
-    ) where {Ttok<:Real,Tdol<:Real,Tpx<:Real}
+    )::UniswapV2Reserves where {Ttok<:Real,Tdol<:Real,Tpx<:Real}
 
         @variables  amount_token  amount_dollar
         @parameters pool_constant target_price
@@ -87,7 +69,7 @@ module PoolSolvers
         newTargetPrice  = newAmountDollar / newAmountToken
         newTotalCapital = newAmountDollar + newAmountToken * newTargetPrice
 
-        return UniswapV2Reserves(newAmountDollar, newAmountToken, newTotalCapital, newTargetPrice)
+        return UniswapV2Reserves(newAmountDollar, newAmountToken, newTargetPrice, newTotalCapital)
     end
 
 end # module

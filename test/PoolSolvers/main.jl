@@ -4,6 +4,37 @@ using UniswapTools
 @testset "PoolSolvers" begin
     amount_dollar::Real = 18500000
     amount_token::Real = 4900
+    @testset "UniswapV2PoolReservesUpdate" begin
+        @testset "Scenario 1" begin
+            current_price = 3939.99 
+            current_dollar = 25_000_000
+            current_token = 18_500
+            total_capital = 1000 
+            expected_dollar = 500
+            expected_token = 0.1269038 
+
+            f = @UniswapV2Position Dict(
+                :poolDollarAmount => current_dollar,
+                :poolTokenAmount => current_token,
+                :price => current_price,
+                :totalCapital => total_capital
+            )
+        
+            new_state = UniswapV2PoolPositionState(f)
+            @testset "should properly update the dollar amount" begin
+                @test new_state.poolDollarAmount ≈ expected_dollar rtol=1e-3
+            end
+            @testset "should properly update the token amount" begin
+                @test new_state.poolTokenAmount ≈ expected_token rtol=1e-3
+            end
+            @testset "should properly update the total capital" begin
+                @test new_state.totalCapital ≈ total_capital rtol=1e-3
+            end
+            @testset "should properly set the target price" begin
+                @test new_state.price ≈ current_price rtol=1e-3
+            end
+        end
+    end
     @testset "UniswapV2PoolPriceUpdate" begin
         @testset "Scenario 1" begin
             target_price = 3500
@@ -28,7 +59,7 @@ using UniswapTools
                 @test new_state.totalCapital ≈ expected_total_capital rtol=1e-3
             end
             @testset "should properly set the target price" begin
-                @test new_state.targetPrice ≈ target_price rtol=1e-3
+                @test new_state.price ≈ target_price rtol=1e-3
             end
         end
     end
