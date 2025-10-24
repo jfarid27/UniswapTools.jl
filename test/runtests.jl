@@ -2,5 +2,5 @@ using Test
 using UniswapTools
 
 @testset "UniswapTools" begin
-    include("PoolSolvers.test.jl")
+    include("PoolSolvers/main.jl")
 end

@@ -1,19 +1,28 @@
 module Types
-    export @UniswapV2Position, UniswapV2ReservesTarget, UniswapV2Reserves
+    export @UniswapV2Position, UniswapV2PriceTarget, UniswapV2ReservesTarget, UniswapV2Reserves
 
     # allowed keys
     const ALLOWED = Set([:poolTokenAmount, :poolDollarAmount, :targetPrice])
 
     # concrete struct for the full set
-    struct UniswapV2ReservesTarget{Ttok<:Real, Tdol<:Real, Tpx<:Real}
+    struct UniswapV2ReservesTarget{Ttok<:Real, Tdol<:Real, TCap<:Real, Tpx<:Real}
+        poolTokenAmount  :: Ttok
+        poolDollarAmount :: Tdol
+        totalCapital     :: TCap
+        price            :: Tpx
+    end
+
+    struct UniswapV2PriceTarget{Ttok<:Real, Tdol<:Real, Tpx<:Real}
         poolTokenAmount  :: Ttok
         poolDollarAmount :: Tdol
         targetPrice      :: Tpx
     end
 
-    struct UniswapV2Reserves{Tdol<:Real, Ttok<:Real}
+    struct UniswapV2Reserves{Tdol<:Real, Ttok<:Real, TCap<:Real, Tpx<:Real}
         poolDollarAmount :: Tdol
         poolTokenAmount  :: Ttok
+        totalCapital     :: TCap
+        targetPrice      :: Tpx
     end
 
     # validate + canonicalize to a NamedTuple with sorted keys
@@ -31,30 +40,52 @@ module Types
 
     # macro: normalize, then choose struct or NT
     macro UniswapV2Position(ex)
-        # capture the defining module so calls are qualified
         mod = @__MODULE__
-
-        nt = gensym(:nt)
-        x  = gensym(:x)
-
-        # sorted full-key tuple
-        fullK = (:poolDollarAmount, :poolTokenAmount, :targetPrice)
-
+    
+        # gensyms for hygienic temps
+        x_sym  = gensym(:x)
+        nt_sym = gensym(:nt)
+        keys_sym = gensym(:keys)
+    
+        # canonical key tuples we recognize
+        priceTargetK    = (:poolDollarAmount, :poolTokenAmount, :targetPrice)
+        reservesTargetK = (:poolDollarAmount, :poolTokenAmount, :price, :totalCapital)
+    
         return quote
-            # evaluate user expr once
-            local $(x)  = $(esc(ex))
-            # normalize to canonical NamedTuple in the defining module
-            local $(nt) = $(mod)._canon_nt($(x))
-
-            if keys($(nt)) === $(fullK)
-                # build the concrete struct from the canonical NT
-                $(mod).UniswapV2ReservesTarget(
-                    getproperty($(nt), :poolTokenAmount),
-                    getproperty($(nt), :poolDollarAmount),
-                    getproperty($(nt), :targetPrice),
+            # evaluate user expression once
+            local $(x_sym) = $(esc(ex))
+    
+            # step 1: normalize to canonical NamedTuple (sort keys, check allowed)
+            # NOTE: we call the module's helpers with full qualification
+            local $(nt_sym) = $mod._canon_nt($(x_sym))
+    
+            # collect its keys (a tuple)
+            local $(keys_sym) = keys($(nt_sym))
+    
+            if $(keys_sym) === $priceTargetK
+                # build UniswapV2PriceTarget
+                $mod.UniswapV2PriceTarget(
+                    getproperty($(nt_sym), :poolTokenAmount),
+                    getproperty($(nt_sym), :poolDollarAmount),
+                    getproperty($(nt_sym), :targetPrice),
                 )
+    
+            elseif $(keys_sym) === $reservesTargetK
+                # build UniswapV2ReservesTarget
+                $mod.UniswapV2ReservesTarget(
+                    getproperty($(nt_sym), :poolTokenAmount),
+                    getproperty($(nt_sym), :poolDollarAmount),
+                    getproperty($(nt_sym), :price),
+                    getproperty($(nt_sym), :totalCapital),
+                )
+    
             else
-                $(nt)
+                # graceful error with actual keyset
+                throw(ArgumentError(
+                    "Unrecognized key combination $(Tuple($(keys_sym))). " *
+                    "Allowed symbols are $(collect($mod.ALLOWED)). " *
+                    "Expected keysets like $priceTargetK or $reservesTargetK."
+                ))
             end
         end
     end
