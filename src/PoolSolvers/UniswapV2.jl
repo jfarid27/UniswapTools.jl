@@ -1,6 +1,6 @@
-module PoolSolvers.UniswapV2
+module UniswapV2
     using ModelingToolkit, NonlinearSolve, Symbolics
-    using ..Types
+    using ...Types
     const UTT = Types 
 
     export UniswapV2PoolPositionState

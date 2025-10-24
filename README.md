@@ -1,5 +1,7 @@
 # Uniswap Tools
 
+![](https://github.com/jfarid27/UniswapTools.jl/actions/workflows/CI.yml/badge.svg)
+
 # Introduction
 
 This project serves as a set of functions useful in analyzing [Uniswap](https://uniswap.org/)
