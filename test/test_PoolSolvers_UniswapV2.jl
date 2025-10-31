@@ -1,11 +1,11 @@
 using Test
 using UniswapTools
 
-@testset "PoolSolvers" begin
+@testset "PoolSolvers UniswapV2" begin
     amount_dollar::Real = 18500000
     amount_token::Real = 4900
     @testset "UniswapV2PoolReservesUpdate" begin
-        @testset "Scenario 1" begin
+        @testset "Scenario 1: Solve for pool reserves given price and target total capital." begin
             current_price = 3939.99 
             current_dollar = 25_000_000
             current_token = 18_500
@@ -36,7 +36,7 @@ using UniswapTools
         end
     end
     @testset "UniswapV2PoolPriceUpdate" begin
-        @testset "Scenario 1" begin
+        @testset "Scenario 2: Solve for pool reserves given existing position and target price" begin
             target_price = 3500
             expected_dollar = 1.781e7
             expected_token = 5089.204 
