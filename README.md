@@ -42,6 +42,13 @@ environment for use.
 
 ## Usage
 
+### On Math
+
+Because julia has excellent floating point operation math, it is
+recommended to use `Float64` in inputs to maintain threshold precision
+during calculations. If using a token or dollar position with digits,
+just include the digits in the computation.
+
 ### PoolPositions
 
 #### @UniswapV2Position
@@ -91,6 +98,45 @@ or the dual space of reserves. One should think about the API of
 this code as `pool state with unknown parameters` and
 `functions that find unknown parameters`.
 
+### @UniswapV3Position
+
+Similarly for Uniswap V3 positions, there is a generic macro to create
+a position and get the total token reserves of the position given a total
+amount of capital in dollars. Calling the result of the macro on the
+UniswapV3PoolPositionState function will return a valid pool state.
+
+```julia
+    position = @UniswapV3Position Dict(
+        :poolDollarAmount => amount_dollar,
+        :poolTokenAmount => amount_token,
+        :price => current_price,
+        :totalCapital => total_capital,
+        :upperPriceBound => upper_bound,
+        :lowerPriceBound => lower_bound
+    )
+
+    positionState = UniswapV3PoolPositionState(position)
+```
+
+Similarly to V2, if the user supplies a `:targetPrice` instead of
+`:totalCapital` and current position values, the function will
+compute the new position reserves at the target price.
+
+```julia
+
+    position = @UniswapV3Position Dict(
+        :poolDollarAmount => current_dollar,
+        :price => current_price,
+        :targetPrice => target_price,
+        :poolTokenAmount => current_token,
+        :upperPriceBound => upper_bound,
+        :lowerPriceBound => lower_bound
+    )
+    positionState = UniswapV3PoolPositionState(position)
+
+```
+
+
 
 ## Testing
 
@@ -107,3 +153,5 @@ the payoff curves, and suggests delta hedging methods.
 [Zhang - Automated Market Making and Loss-Versus-Rebalancing](https://arxiv.org/abs/2208.06046)
 
 [Lambert - How to deploy delta-neutral liquidity in Uniswap](https://lambert-guillaume.medium.com/how-to-deploy-delta-neutral-liquidity-in-uniswap-or-why-euler-finance-is-a-game-changer-for-lps-1d91efe1e8ac)
+
+[Kuznetsov - Uniswap Development Book](https://uniswapv3book.com/index.html)
