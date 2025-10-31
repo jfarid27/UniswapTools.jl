@@ -34,7 +34,16 @@ and import the code via using .Uniswap.
 ```
 Pkg> activate .
 Pkg> instantiate
-using .Uniswap
+using UniswapTools
+```
+
+Alternatively, you can navigate to the package folder and start julia
+with the project specification.
+
+```
+julia --project=.
+
+julia> using UniswapTools
 ```
 
 After this, available macros and functions will be in your
