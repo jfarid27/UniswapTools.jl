@@ -86,7 +86,6 @@ module Types
     _canon_nt_v3(x::NamedTuple) = begin
         nt = _check_allowed_v3(x)
         ks = collect(keys(nt)); sort!(ks)
-        @show (ordered_keys=ks)
         NamedTuple{Tuple(ks)}(nt)
     end
     _canon_nt_v3(d::Dict) = _canon_nt_v3((; d...))  # Dict → kwargs → NT

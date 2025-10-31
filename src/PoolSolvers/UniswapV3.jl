@@ -103,10 +103,6 @@ module UniswapV3
         state::UniswapV3PriceTarget{Tlow, Ttok, Tdol, Tpx, Tupp}
     )::UniswapV3Reserves where {Tlow<:Real, Ttok<:Real,Tdol<:Real,Tpx<:Real,Tupp<:Real}
 
-        @show (target=state.targetPrice, current=state.price)
-        @show (lower=state.lowerPriceBound, upper=state.upperPriceBound)
-        @show (ctoken=state.poolTokenAmount, cdollar=state.poolDollarAmount)
-
         upper_sqrt_price = price_to_sqrtp(state.upperPriceBound)
         lower_sqrt_price = price_to_sqrtp(state.lowerPriceBound)
         target_sqrt_price = price_to_sqrtp(state.targetPrice)
@@ -114,15 +110,10 @@ module UniswapV3
         change_sqrt_price = target_sqrt_price - current_sqrt_price
         inv_change_sqrt_price = Q96 * ((1/target_sqrt_price) - (1/current_sqrt_price))
 
-        @show (target_sqrt_price=target_sqrt_price, current_sqrt_price=current_sqrt_price)
-        @show (change_sqrt_price=change_sqrt_price, inv_change_sqrt_price=inv_change_sqrt_price)
-
         token_liquidity = liquidityToken(state.poolTokenAmount, state.price, state.upperPriceBound)
         dollar_liquidity = liquidityDollar(state.poolDollarAmount, state.price, state.lowerPriceBound)
 
         liquidity = min(token_liquidity, dollar_liquidity)
-
-        @show (token_liquidity=token_liquidity, dollar_liquidity=dollar_liquidity)
 
         amount_token_del = amountTokenDel(liquidity, target_sqrt_price, current_sqrt_price) / eth 
         amount_dollar_del = amountDollarDel(liquidity, target_sqrt_price, current_sqrt_price) / eth
@@ -132,8 +123,6 @@ module UniswapV3
         else
             amount_dollar_del *= -1
         end
-
-        @show (amount_token_del=amount_token_del, amount_dollar_del=amount_dollar_del)
 
         tokens = state.poolTokenAmount + amount_token_del
         dollars = state.poolDollarAmount + amount_dollar_del
