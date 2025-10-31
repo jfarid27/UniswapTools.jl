@@ -9,28 +9,59 @@ module Types
                            :totalCapital, :poolTokenAmount, :poolDollarAmount, :targetPrice])
 
     # concrete struct for the full set
+    """
+        UniswapV2ReservesTarget(dollars, tokens, price, totalCapital)
+
+        Represent an intention to deposit into a pool with a specied amount of total capital in
+        dollars. Given the current state of the pool with tokens, dollars, and a price, a user with
+        "totalCapital" in dollars can use this to model what their position will be after depositing
+        into the pool. Will convert variables into Float64 when constructed to allow for higher
+        precision in future calculations.
+    """
     struct UniswapV2ReservesTarget{Tdol<:Real, Ttok<:Real, TCap<:Real, Tpx<:Real}
         poolDollarAmount :: Tdol
         poolTokenAmount  :: Ttok
         price            :: Tpx
         totalCapital     :: TCap
+        function UniswapV2ReservesTarget(poolDollarAmount, poolTokenAmount, price, totalCapital)
+            new{Float64,Float64,Float64,Float64}(
+                float(poolDollarAmount), float(poolTokenAmount), float(price), float(totalCapital)
+
+            )
+        end
     end
 
-    struct UniswapV3ReservesTarget{Tlow<:Real, Tdol<:Real, Ttok<:Real, TCap<:Real, Tpx<:Real, Tupp<:Real}
-        lowerPriceBound  :: Tlow
-        poolDollarAmount :: Tdol
-        poolTokenAmount  :: Ttok
-        price            :: Tpx
-        totalCapital     :: TCap
-        upperPriceBound  :: Tupp
-    end
+    """
+        UniswapV2PriceTarget(dollars, tokens, targetPrice)
 
+        Represent an intention to fetch a position's reserves given a user's current position and
+        a new price. The data specifies a current pool state with tokens, dollars, and a target
+        price. Will convert variables into Float64 when constructed to allow for higher precision
+        in future calculations.
+    """
     struct UniswapV2PriceTarget{Tdol<:Real, Ttok<:Real, Tpx<:Real}
         poolDollarAmount :: Tdol
         poolTokenAmount  :: Ttok
         targetPrice      :: Tpx
+        function UniswapV2PriceTarget(poolDollarAmount, poolTokenAmount, targetPrice)
+            new{Float64,Float64,Float64}(
+                float(poolDollarAmount), float(poolTokenAmount), float(targetPrice)
+
+            )
+        end
     end
 
+    """
+        UniswapV3ReservesTarget(lowerBound, dollars, tokens, price, totalCapital, upperBound)
+
+        Represent an intention to deposit into a pool. Given the current state of the overall pool with
+        tokens, dollars, and a price, a user with "totalCapital" in dollars can use this to model what
+        their position will be after depositing into the pool. Will convert variables into Float64 when
+        constructed to allow for higher precision in future calculations.
+        
+        Note the user should specify the overall pool's token and dollar amount, as this is used in initial
+        conditions, and should not be a single position's reserves.
+    """
     struct UniswapV3ReservesTarget{Tlow<:Real, Tdol<:Real, Ttok<:Real, TCap<:Real, Tpx<:Real, Tupp<:Real}
         lowerPriceBound  :: Tlow
         poolDollarAmount :: Tdol
@@ -38,8 +69,22 @@ module Types
         price            :: Tpx
         totalCapital     :: TCap
         upperPriceBound  :: Tupp
+        function UniswapV3ReservesTarget(lowerPriceBound, poolDollarAmount, poolTokenAmount, price, totalCapital, upperPriceBound)
+            new{Float64,Float64,Float64,Float64,Float64,Float64}(
+                float(lowerPriceBound),float(poolDollarAmount), float(poolTokenAmount), float(price), float(totalCapital), float(upperPriceBound)
+
+            )
+        end
     end
 
+    """
+        UniswapV3PriceTarget(lowerBound, dollars, tokens, price, targetPrice, upperBound)
+
+        Represent an intention to fetch a position's reserves given a user's current position and a new price.
+        The data specifies a position with tokens, dollars, upper and lower bounds, current price, and
+        a price target. Will convert variables into Float64 when constructed to allow for higher precision
+        in future calculations.
+    """
     struct UniswapV3PriceTarget{Tlow<:Real, Tdol<:Real, Ttok<:Real, Tcpx<:Real,  Tpx<:Real, Tupp<:Real}
         lowerPriceBound  :: Tlow
         poolDollarAmount :: Tdol
@@ -47,15 +92,40 @@ module Types
         price            :: Tcpx
         targetPrice      :: Tpx
         upperPriceBound  :: Tupp
+
+        function UniswapV3PriceTarget(lowerPriceBound, poolDollarAmount, poolTokenAmount, price, targetPrice, upperPriceBound)
+            new{Float64,Float64,Float64,Float64,Float64,Float64}(
+                float(lowerPriceBound),float(poolDollarAmount), float(poolTokenAmount), float(price), float(targetPrice), float(upperPriceBound)
+
+            )
+        end
     end
 
+    """
+        UniswapV2Reserves(dollars, tokens, price, totalCapital)
+
+        Represent a current V2 position state. Will convert variables into Float64 when constructed to
+        allow for higher precision in future calculations.
+    """
     struct UniswapV2Reserves{Tdol<:Real, Ttok<:Real, Tpx<:Real, TCap<:Real}
         poolDollarAmount :: Tdol
         poolTokenAmount  :: Ttok
         price            :: Tpx
         totalCapital     :: TCap
+
+        function UniswapV2Reserves(poolDollarAmount, poolTokenAmount, price, totalCapital)
+            new{Float64,Float64,Float64,Float64}(
+                float(poolDollarAmount), float(poolTokenAmount), float(price), float(totalCapital)
+            )
+        end
     end
 
+    """
+        UniswapV3Reserves(lowerBound, dollars, tokens, price, totalCapital, upperBound)
+
+        Represent a current V3 position state. Will convert variables into Float64 when constructed to
+        allow for higher precision in future calculations.
+    """
     struct UniswapV3Reserves{Tlow<:Real, Tdol<:Real, Ttok<:Real, Tpx<:Real, TCap<:Real, Tupp<:Real}
         lowerPriceBound  :: Tlow
         poolDollarAmount :: Tdol
@@ -63,12 +133,18 @@ module Types
         price            :: Tpx
         totalCapital     :: TCap
         upperPriceBound  :: Tupp
+
+        function UniswapV3Reserves(lower, usd, tok, price, cap, upper)
+            new{Float64,Float64,Float64,Float64,Float64,Float64}(
+                float(lower), float(usd), float(tok), float(price), float(cap), float(upper)
+            )
+        end
     end
 
     # validate + canonicalize to a NamedTuple with sorted keys
     _check_allowed_v2(nt::NamedTuple) = begin
         bad = filter(k -> k ∉ ALLOWEDV2, keys(nt))
-        isempty(bad) || error("Unknown keys: $(Tuple(bad)) — allowed: $(collect(ALLOWED))")
+        isempty(bad) || error("Unknown keys: $(Tuple(bad)) — allowed: $(collect(ALLOWEDV2))")
         nt
     end
     _canon_nt_v2(x::NamedTuple) = begin
@@ -80,7 +156,7 @@ module Types
 
     _check_allowed_v3(nt::NamedTuple) = begin
         bad = filter(k -> k ∉ ALLOWEDV3, keys(nt))
-        isempty(bad) || error("Unknown keys: $(Tuple(bad)) — allowed: $(collect(ALLOWED))")
+        isempty(bad) || error("Unknown keys: $(Tuple(bad)) — allowed: $(collect(ALLOWEDV3))")
         nt
     end
     _canon_nt_v3(x::NamedTuple) = begin
