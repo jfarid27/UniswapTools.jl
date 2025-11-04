@@ -52,29 +52,14 @@ const eth::Int128 = 1e18
 
     @testset "UniswapV3PoolPriceUpdate" begin
         @testset "Scenario 2: Solve for pool reserves given existing position and target price." begin
-            let current_price::Float64 = 5000,
-                target_price::Float64 = 5003.913912782393,
-                current_dollar::Float64 = 5000,
-                current_token::Float64 = 1,
-                upper_bound::Float64 = 5500.0,
-                lower_bound::Float64 =  4545.0,
-                expected_dollar_del::Float64 = 42,
+            let expected_dollar_del::Float64 = 42,
                 expected_token_del::Float64 = -0.0083967142;
 
-                expected_tokens = current_token + expected_token_del
-                expected_dollars = current_dollar + expected_dollar_del
-                expected_total_capital = expected_dollars + expected_tokens * target_price;
+                expected_tokens = v3_reserves_data.current_token + expected_token_del
+                expected_dollars = v3_reserves_data.current_dollar + expected_dollar_del
+                expected_total_capital = expected_dollars + expected_tokens * v3_reserves_data.target_price
 
-                d = @UniswapV3Position Dict(
-                    :poolDollarAmount => current_dollar,
-                    :price => current_price,
-                    :targetPrice => target_price,
-                    :poolTokenAmount => current_token,
-                    :upperPriceBound => upper_bound,
-                    :lowerPriceBound => lower_bound
-                )
-            
-                new_state = UniswapV3PoolPositionState(d)
+                new_state = UniswapV3PoolPositionState(v3_reserves)
                 @testset "should properly update the dollar amount" begin
                     @test new_state.poolDollarAmount ≈ expected_dollars rtol=1e-3
                 end
@@ -85,7 +70,7 @@ const eth::Int128 = 1e18
                     @test new_state.totalCapital ≈ expected_total_capital rtol=1e-3
                 end
                 @testset "should properly set the target price" begin
-                    @test new_state.price ≈ target_price rtol=1e-3
+                    @test new_state.price ≈ v3_reserves_data.target_price rtol=1e-3
                 end
             end
         end
