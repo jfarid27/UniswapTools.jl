@@ -3,12 +3,30 @@ module UniswapV3
     using ...Types
     const UTT = Types 
 
-    export UniswapV3PoolPositionState
-    export liquidityToken, liquidityDollar
-    export price_to_sqrtp
+    export UniswapV3PoolPositionState, 
+           ConvertV3ReservesToNewPrice,
+           liquidityToken, liquidityDollar,
+           price_to_sqrtp
 
     const Q96::Int128 = (Int128(2))^96
     const eth = Int128(1e18)
+
+    function ConvertV3ReservesToNewPrice(
+        reserves::UniswapV3Reserves{Tlow, Ttok, Tdol, TCap, Tpx, Tupp},
+        target_price::Real
+    )::UniswapV3Reserves where {Tlow<:Real, Ttok<:Real, Tdol<:Real, TCap<:Real, Tpx<:Real, Tupp<:Real}
+
+        new_reserves = UniswapV3PriceTarget(
+            reserves.lowerPriceBound,
+            reserves.poolDollarAmount,
+            reserves.poolTokenAmount,
+            reserves.price,
+            target_price,
+            reserves.upperPriceBound
+        )
+
+        return UniswapV3PoolPositionState(new_reserves)
+    end
 
     """Liquidity Position target given current reserves and the current price."""
     function UniswapV3PoolPositionState(
