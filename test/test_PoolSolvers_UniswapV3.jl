@@ -4,8 +4,6 @@ using UniswapTools
 include("./MockData.jl")
 using .MockData
 
-const eth::Int128 = 1e18
-
 @testset "PoolSolvers UniswapV3" begin
     @testset "UniswapV3LiquidityCalculation" begin
         @testset "should properly calculate sqrt price in q96 format." begin
@@ -77,37 +75,22 @@ const eth::Int128 = 1e18
     end
     @testset "UniswapV3ConvertReservesToNewPrice" begin
         @testset "Scenario 3: Convert reserves point to new price." begin
-            let current_price::Float64 = 5000,
-                target_price::Float64 = 5003.913912782393,
-                current_dollar::Float64 = 5000,
-                current_token::Float64 = 1,
-                upper_bound::Float64 = 5500.0,
-                lower_bound::Float64 =  4545.0;
+            let expected_total_capital = v3_reserves_data.current_dollar + v3_reserves_data.current_token * v3_reserves_data.target_price,
+                reserves = UniswapV3PoolPositionState(v3_reserves)
 
-                expected_total_capital = current_dollar + current_token * current_price;
+                new_state = ConvertV3ReservesToNewPrice(reserves, v3_reserves_data.current_price)
 
-                d = @UniswapV3Position Dict(
-                    :poolDollarAmount => current_dollar,
-                    :price => current_price,
-                    :targetPrice => target_price,
-                    :poolTokenAmount => current_token,
-                    :upperPriceBound => upper_bound,
-                    :lowerPriceBound => lower_bound
-                )
-            
-                reserves = UniswapV3PoolPositionState(d)
-                new_state = ConvertV3ReservesToNewPrice(reserves, current_price)
                 @testset "should properly update the dollar amount" begin
-                    @test new_state.poolDollarAmount ≈ current_dollar rtol=1e-3
+                    @test new_state.poolDollarAmount ≈ v3_reserves_data.current_dollar rtol=1e-3
                 end
                 @testset "should properly update the token amount" begin
-                    @test new_state.poolTokenAmount ≈ current_token rtol=1e-3
+                    @test new_state.poolTokenAmount ≈ v3_reserves_data.current_token rtol=1e-3
                 end
                 @testset "should properly update the total capital" begin
                     @test new_state.totalCapital ≈ expected_total_capital rtol=1e-3
                 end
                 @testset "should properly set the target price" begin
-                    @test new_state.price ≈ current_price rtol=1e-3
+                    @test new_state.price ≈ v3_reserves_data.current_price rtol=1e-3
                 end
             end
         end
