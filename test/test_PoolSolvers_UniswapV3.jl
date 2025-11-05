@@ -125,8 +125,8 @@ using .MockData
             total_capitals = @chain begin
                 v3_reserves                        # start a new reserve target
                 UniswapV3PoolPositionState         # Give me a new position
-                MapAcrossPrices(4545.1, 5500, 200)(_)   #map over a few target prices
-                map(res -> res.totalCapital, _)
+                MapAcrossPrices(4545.1, 5500, 200)   # map over a few target prices
+                getindex(_, :totalCapital)
             end
 
             expected_total_capital = 9312.28

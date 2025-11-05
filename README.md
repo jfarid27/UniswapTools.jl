@@ -26,6 +26,19 @@ hedging Uniswap positions.
 
 ## Installation
 
+### Github
+
+With a Julia installation locally installed, you can install the package directly from
+a git repo URL. Switch to package mode and simply add the URL for this project.
+
+```
+pkg> add https://github.com/jfarid27/UniswapTools.jl
+```
+
+Now you should be able to use the package with `using UniswapTools` in your REPL.
+
+### Source
+
 To use, simply download the code and navigate to the project.
 Open julia REPL and click "]" to switch to package mode, then
 activate and instantiate the project. Then click backspace
@@ -49,7 +62,50 @@ julia> using UniswapTools
 After this, available macros and functions will be in your
 environment for use.
 
+
 ## Usage
+
+### Quick and Dirty using Point-Free Programming
+
+There are a number of helper functions to allow for users to do common
+data analytics in a point-free style. The functions are designed to work
+with [Chain.jl](https://www.juliapackages.com/p/chain), a popular functional
+library in the Julia ecosystem.
+
+Add Chain and UniswapTools to your environemnt and you can use the code below to
+simulate creating a V3 position, then seeing what the total capital of reserves will
+be across multiple prices. Note "dollars" and "tokens" are referencing one reserve type
+and another, but "dollars" is specifically used as the units for price. For example,
+in the ETH - USDC pool you can use USDC amounts for dollars, and ETH amounts for tokens,
+and prices in USDC terms. If you wish, you can subsititute dollars for WETH and simulate
+reserves across arbitrary token to WETH pairs, but note prices and "totalCapital" must be
+in ETH terms.
+
+```julia
+
+    const v3_position = @UniswapV3Position Dict(
+        :poolDollarAmount => 18500000,    # Initialize with the global V3 pool's total dollars
+        :poolTokenAmount => 4900,         # Also initialized with the global V3 pool's total tokens
+        :price => 3965.75,
+        :totalCapital => 10000,
+        :upperPriceBound => 4500,
+        :lowerPriceBound => 3800 
+    )
+
+    mapped_positions = @chain begin
+        v3_position                        # start a new reserve target
+        UniswapV3PoolPositionState         # Give me a new reserve position at this target
+        MapAcrossPrices(4545.1, 5500, 200)   # map over a range target prices and give me the reserves
+        getindex(_, :totalCapital)         # Return the total capital in USD across each price
+    end
+```
+
+With `mapped_positions` you should now have a vector of the TVL in dollars of your position
+across a range of prices. You can fetch other values like `:poolDollarAmount` and `:poolTokenAmount`
+if you wish, and use these in packages like [Plots.jl](https://docs.juliaplots.org/latest/)
+to visualize them.
+
+See the pool positions docs below to learn how to create a v3_price_target.
 
 ### On Numbers
 
@@ -57,29 +113,6 @@ Because julia has excellent floating point operation math, it is
 recommended to use `Float64` in inputs to maintain threshold precision
 during calculations. If using a token or dollar position with digits,
 just include the digits in the computation.
-
-## Point-Free Programming
-
-There are a number of helper functions to allow for users to do common
-data analytics in a point-free style. The functions are designed to work
-with [Chain.jl](https://www.juliapackages.com/p/chain), a popular functional
-library in the Julia ecosystem.
-
-For example, when given a target datatype representing an active pool
-position, if you wish to simulate the internal token reserves across a
-range of prices, you can use the below code after installing UniswapTools
-and Chain.
-
-```julia
-    mapped_positions = @chain begin
-        v3_price_target                         # A created price target 
-        UniswapV3PoolPositionState              # This is now a pool reserve position
-        MapAcrossV3Prices(_, 4545.1, 5500, 200) # map over a few target prices
-        map(res -> (res.poolTokenAmount, res.poolDollarAmount), _) # Returns the toke and dollar amounts in the reserves across each price
-    end
-```
-
-See the pool positions docs below to learn how to create a v3_price_target.
 
 
 ### PoolPositions
@@ -175,19 +208,30 @@ compute the new position reserves at the target price.
 
 ```
 
-
-
 ## Testing
 
 In the project folder, run the below code to run tests.
 
 `julia --project -e 'using Revise, Pkg; Pkg.test()'
 
+## License
+
+`LGPL-3.0-or-later`
+
+1. Copy modify as you wish provided you post attribution.
+2. You may integrate this into a closed-source system provided you attribute and share this code's
+   source.
+3. There are no guarantees of warranty or liability. (Don't ask me to fix it, and I don't care if
+   you use this and lose all your money. dyor nfa)
+
+Please read the `LICENSE.md` file for more information.
+
 ## Readings
 
 This project is motivated from the research of Zhang and Lambert.
 Their research treats Uniswap positions like options by analyzing
-the payoff curves, and suggests delta hedging methods.
+the payoff curves, and suggests delta hedging methods. Much of the
+logic was also translated from Kuznetsov's excellent UniswapV3Book.
 
 [Zhang - Automated Market Making and Loss-Versus-Rebalancing](https://arxiv.org/abs/2208.06046)
 

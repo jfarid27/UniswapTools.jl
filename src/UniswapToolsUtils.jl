@@ -1,4 +1,5 @@
 module UniswapToolsUtils
+    import Base: getindex, setindex!, Fix2
     using ..Types, ..PoolSolvers, Chain
 
     export ConvertReservesToNewPrice
@@ -44,8 +45,13 @@ module UniswapToolsUtils
         return UniswapV2PoolPositionState(new_reserves)
     end
 
-
     ## Mixed 
+
+    getindex(u::S, k::Symbol) where S<:UniswapReserves = hasfield(typeof(u), k) ?
+        getfield(u, k) : 
+        throw(KeyError(k));
+
+    getindex(us::Vector{S}, k::Symbol) where S<:UniswapReserves = [getindex(u, k) for u in us];
 
     """Monadic Utility to take a given reserve position and map new positions across a range of prices.
     """
