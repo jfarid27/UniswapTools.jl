@@ -1,5 +1,6 @@
 module Types
     export @UniswapV2Position, @UniswapV3Position,
+           UniswapReserves, UniswapReserveTarget, UniswapPriceTarget,
            UniswapV2PriceTarget, UniswapV2ReservesTarget, UniswapV2Reserves,
            UniswapV3PriceTarget, UniswapV3ReservesTarget, UniswapV3Reserves
 
@@ -140,6 +141,11 @@ module Types
             )
         end
     end
+
+    UniswapReserves = Union{UniswapV2Reserves, UniswapV3Reserves};
+    UniswapReserveTarget = Union{UniswapV2ReservesTarget, UniswapV3ReservesTarget};
+    UniswapPriceTarget = Union{UniswapV2PriceTarget, UniswapV3PriceTarget};
+
 
     # validate + canonicalize to a NamedTuple with sorted keys
     _check_allowed_v2(nt::NamedTuple) = begin
