@@ -79,7 +79,7 @@ using .MockData
             let expected_total_capital = v3_reserves_data.current_dollar + v3_reserves_data.current_token * v3_reserves_data.target_price,
                 reserves = UniswapV3PoolPositionState(v3_reserves)
 
-                new_state = ConvertV3ReservesToNewPrice(reserves, v3_reserves_data.current_price)
+                new_state = ConvertReservesToNewPrice(reserves, v3_reserves_data.current_price)
 
                 @testset "should properly update the dollar amount" begin
                     @test new_state.poolDollarAmount ≈ v3_reserves_data.current_dollar rtol=1e-3
@@ -103,7 +103,7 @@ using .MockData
                 new_state = @chain begin
                     v3_reserves
                     UniswapV3PoolPositionState
-                    ConvertV3ReservesToNewPrice(_, v3_reserves_data.current_price)
+                    ConvertReservesToNewPrice(v3_reserves_data.current_price)
                 end
                 @testset "should properly update the dollar amount" begin
                     @test new_state.poolDollarAmount ≈ v3_reserves_data.current_dollar rtol=1e-3
@@ -125,11 +125,13 @@ using .MockData
             total_capitals = @chain begin
                 v3_reserves                        # start a new reserve target
                 UniswapV3PoolPositionState         # Give me a new position
-                MapAcrossV3Prices(_, 4545.1, 5500, 200)   #map over a few target prices
+                MapAcrossPrices(4545.1, 5500, 200)(_)   #map over a few target prices
                 map(res -> res.totalCapital, _)
             end
 
             expected_total_capital = 9312.28
+
+            @show total_capitals
 
             @testset "should return solved total capitals" begin
                 @test total_capitals[1] ≈ expected_total_capital rtol=1e-4
