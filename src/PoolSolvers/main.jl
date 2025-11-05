@@ -7,6 +7,6 @@ module PoolSolvers
     using .UniswapV3
 
     export UniswapV2PoolPositionState
-    export UniswapV3PoolPositionState, ConvertV3ReservesToNewPrice
+    export UniswapV3PoolPositionState, ConvertV3ReservesToNewPrice, MapAcrossV3Prices
     export liquidityToken, liquidityDollar, price_to_sqrtp
 end

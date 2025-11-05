@@ -1,5 +1,6 @@
 using Test
 using UniswapTools
+using Chain
 
 @testset "UniswapTools" begin
     include("./test_PoolSolvers_UniswapV2.jl")

@@ -1,5 +1,6 @@
 using Test
 using UniswapTools
+using Chain
 
 include("./MockData.jl")
 using .MockData
@@ -92,6 +93,46 @@ using .MockData
                 @testset "should properly set the target price" begin
                     @test new_state.price ≈ v3_reserves_data.current_price rtol=1e-3
                 end
+            end
+        end
+    end
+    @testset "UniswapV3 Macros Test" begin
+        @testset "should properly convert reserves to new price" begin
+            let expected_total_capital = v3_reserves_data.current_dollar + v3_reserves_data.current_token * v3_reserves_data.target_price
+
+                new_state = @chain begin
+                    v3_reserves
+                    UniswapV3PoolPositionState
+                    ConvertV3ReservesToNewPrice(_, v3_reserves_data.current_price)
+                end
+                @testset "should properly update the dollar amount" begin
+                    @test new_state.poolDollarAmount ≈ v3_reserves_data.current_dollar rtol=1e-3
+                end
+                @testset "should properly update the token amount" begin
+                    @test new_state.poolTokenAmount ≈ v3_reserves_data.current_token rtol=1e-3
+                end
+                @testset "should properly update the total capital" begin
+                    @test new_state.totalCapital ≈ expected_total_capital rtol=1e-3
+                end
+                @testset "should properly set the target price" begin
+                    @test new_state.price ≈ v3_reserves_data.current_price rtol=1e-3
+                end
+            end
+        end
+
+        @testset "MapAcrossV3Prices should work with price values expansion" begin
+
+            total_capitals = @chain begin
+                v3_reserves                        # start a new reserve target
+                UniswapV3PoolPositionState         # Give me a new position
+                MapAcrossV3Prices(_, 4545.1, 5500, 200)   #map over a few target prices
+                map(res -> res.totalCapital, _)
+            end
+
+            expected_total_capital = 9312.28
+
+            @testset "should return solved total capitals" begin
+                @test total_capitals[1] ≈ expected_total_capital rtol=1e-4
             end
         end
     end
