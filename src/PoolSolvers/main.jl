@@ -6,6 +6,7 @@ module PoolSolvers
     include("UniswapV3.jl")
     using .UniswapV3
 
-    export UniswapV2PoolPositionState, UniswapV3PoolPositionState
+    export UniswapV2PoolPositionState
+    export UniswapV3PoolPositionState, ConvertV3ReservesToNewPrice, MapAcrossV3Prices
     export liquidityToken, liquidityDollar, price_to_sqrtp
 end

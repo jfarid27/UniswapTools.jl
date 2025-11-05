@@ -51,14 +51,44 @@ environment for use.
 
 ## Usage
 
-### On Math
+### On Numbers
 
 Because julia has excellent floating point operation math, it is
 recommended to use `Float64` in inputs to maintain threshold precision
 during calculations. If using a token or dollar position with digits,
 just include the digits in the computation.
 
+## Point-Free Programming
+
+There are a number of helper functions to allow for users to do common
+data analytics in a point-free style. The functions are designed to work
+with [Chain.jl](https://www.juliapackages.com/p/chain), a popular functional
+library in the Julia ecosystem.
+
+For example, when given a target datatype representing an active pool
+position, if you wish to simulate the internal token reserves across a
+range of prices, you can use the below code after installing UniswapTools
+and Chain.
+
+```julia
+    mapped_positions = @chain begin
+        v3_price_target                         # A created price target 
+        UniswapV3PoolPositionState              # This is now a pool reserve position
+        MapAcrossV3Prices(_, 4545.1, 5500, 200) # map over a few target prices
+        map(res -> (res.poolTokenAmount, res.poolDollarAmount), _) # Returns the toke and dollar amounts in the reserves across each price
+    end
+```
+
+See the pool positions docs below to learn how to create a v3_price_target.
+
+
 ### PoolPositions
+
+In general the main theme of the code is to start with a `Target` type representing
+a user's intention to create a position, and a `Reserves` type representing a live
+position. The code takes a target and computes a reserve while optimizing for
+constraints defined in the Uniswap pool system. Each pool type comes with it's
+own contructors for appropriate Reserve types given a Target type.
 
 #### @UniswapV2Position
 
@@ -107,7 +137,7 @@ or the dual space of reserves. One should think about the API of
 this code as `pool state with unknown parameters` and
 `functions that find unknown parameters`.
 
-### @UniswapV3Position
+#### @UniswapV3Position
 
 Similarly for Uniswap V3 positions, there is a generic macro to create
 a position and get the total token reserves of the position given a total

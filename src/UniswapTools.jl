@@ -6,6 +6,6 @@ module UniswapTools
   using .PoolSolvers
 
   export @UniswapV2Position, UniswapV2PoolPositionState,
-         @UniswapV3Position, UniswapV3PoolPositionState,
+         @UniswapV3Position, UniswapV3PoolPositionState, ConvertV3ReservesToNewPrice, MapAcrossV3Prices,
          liquidityToken, liquidityDollar, price_to_sqrtp
 end

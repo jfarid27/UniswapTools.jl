@@ -1,14 +1,49 @@
 module UniswapV3
-    using ModelingToolkit, NonlinearSolve, Symbolics
+    using ModelingToolkit, NonlinearSolve, Symbolics, Chain
     using ...Types
     const UTT = Types 
 
-    export UniswapV3PoolPositionState
-    export liquidityToken, liquidityDollar
-    export price_to_sqrtp
+    export UniswapV3PoolPositionState, 
+           ConvertV3ReservesToNewPrice,
+           liquidityToken, liquidityDollar,
+           price_to_sqrtp, MapAcrossV3Prices
 
     const Q96::Int128 = (Int128(2))^96
     const eth = Int128(1e18)
+
+    """Monadic Utility to take a given reserve position and map new positions across a range of prices.
+    """
+    function MapAcrossV3Prices(
+        reserves::UniswapV3Reserves,
+        lower_price::Real,
+        upper_price::Real,
+        step::Real
+    )::Vector{UniswapV3Reserves}
+        @chain begin
+            reserves
+            map(price -> _ => price, range(start=lower_price, stop=upper_price, step=step))   #map over a few target prices
+            map(pos -> ConvertV3ReservesToNewPrice(pos.first, pos.second), _) # convert each new reserve price target to a new position
+        end
+    end
+
+    """Utility to convert a given reserve position to a new price.
+    """
+    function ConvertV3ReservesToNewPrice(
+        reserves::UniswapV3Reserves{Tlow, Ttok, Tdol, TCap, Tpx, Tupp},
+        target_price::Real
+    )::UniswapV3Reserves where {Tlow<:Real, Ttok<:Real, Tdol<:Real, TCap<:Real, Tpx<:Real, Tupp<:Real}
+
+        new_reserves = UniswapV3PriceTarget(
+            reserves.lowerPriceBound,
+            reserves.poolDollarAmount,
+            reserves.poolTokenAmount,
+            reserves.price,
+            target_price,
+            reserves.upperPriceBound
+        )
+
+        return UniswapV3PoolPositionState(new_reserves)
+    end
 
     """Liquidity Position target given current reserves and the current price."""
     function UniswapV3PoolPositionState(
@@ -126,7 +161,7 @@ module UniswapV3
 
         tokens = state.poolTokenAmount + amount_token_del
         dollars = state.poolDollarAmount + amount_dollar_del
-        capital = tokens * state.price + dollars
+        capital = tokens * state.targetPrice + dollars
 
         return UniswapV3Reserves(
             state.lowerPriceBound,
