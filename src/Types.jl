@@ -4,7 +4,7 @@ module Types
            UniswapV2PriceTarget, UniswapV2ReservesTarget, UniswapV2Reserves,
            UniswapV3PriceTarget, UniswapV3ReservesTarget, UniswapV3Reserves
 
-    # allowed keys
+    # allowed keys for targets
     const ALLOWEDV2 = Set([:price, :totalCapital, :poolTokenAmount, :poolDollarAmount, :targetPrice])
     const ALLOWEDV3 = Set([:lowerPriceBound, :upperPriceBound, :price,
                            :totalCapital, :poolTokenAmount, :poolDollarAmount, :targetPrice])
@@ -127,17 +127,19 @@ module Types
         Represent a current V3 position state. Will convert variables into Float64 when constructed to
         allow for higher precision in future calculations.
     """
-    struct UniswapV3Reserves{Tlow<:Real, Tdol<:Real, Ttok<:Real, Tpx<:Real, TCap<:Real, Tupp<:Real}
-        lowerPriceBound  :: Tlow
-        poolDollarAmount :: Tdol
-        poolTokenAmount  :: Ttok
-        price            :: Tpx
-        totalCapital     :: TCap
-        upperPriceBound  :: Tupp
+    struct UniswapV3Reserves{Tlow<:Real, Tdol<:Real, Ttok<:Real, Tpx<:Real, TCap<:Real, Tupp<:Real, Tobd<:Real, Tobt<:Real}
+        lowerPriceBound   :: Tlow
+        outOfBoundsDollar :: Tobd
+        outOfBoundsToken  :: Tobd
+        poolDollarAmount  :: Tdol
+        poolTokenAmount   :: Ttok
+        price             :: Tpx
+        totalCapital      :: TCap
+        upperPriceBound   :: Tupp
 
-        function UniswapV3Reserves(lower, usd, tok, price, cap, upper)
-            new{Float64,Float64,Float64,Float64,Float64,Float64}(
-                float(lower), float(usd), float(tok), float(price), float(cap), float(upper)
+        function UniswapV3Reserves(lower, obd, obt, usd, tok, price, cap, upper)
+            new{Real,Real,Real,Real,Real,Real,Real, Real}(
+                float(lower), float(obd), float(obt), float(usd), float(tok), float(price), float(cap), float(upper)
             )
         end
     end
