@@ -2,14 +2,16 @@ module MockData
 
     using UniswapTools
 
-    export v3_position_data, v3_global_data, v3_position
+    export v3_position_data, v3_global_data, v3_position, v3_position_data
     export v3_reserves_data, v3_reserves
 
     const v3_position_data = (
         current_price   = 3965.75,
         total_capital   = 10000, 
         upper_bound     = 4500,
-        lower_bound     =  3800
+        lower_bound     =  3800,
+        dollar_out_of_bound = 10485.018675853307,
+        token_out_of_bound = 2.5355440104304994
     )
 
     const v3_global_data = (
@@ -32,7 +34,9 @@ module MockData
         current_dollar = 5000,
         current_token  = 1,
         upper_bound    = 5500,
-        lower_bound    =  4545
+        lower_bound    =  4545,
+        dollar_out_of_bound = 10238.677582189383,
+        token_out_of_bound = 2.0478379108933464
     )
 
     const v3_reserves = @UniswapV3Position Dict(

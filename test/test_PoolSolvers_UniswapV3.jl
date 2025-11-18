@@ -46,6 +46,12 @@ using .MockData
             @testset "should properly set the target price" begin
                 @test new_state.price ≈ v3_position_data.current_price rtol=1e-3
             end
+            @testset "should properly set the out of bound dollar amount" begin
+                @test new_state.outOfBoundsDollar ≈ v3_position_data.dollar_out_of_bound rtol=1e-3
+            end
+            @testset "should properly set the out of bound token amount" begin
+                @test new_state.outOfBoundsToken ≈ v3_position_data.token_out_of_bound rtol=1e-3
+            end
         end
     end
 
@@ -70,6 +76,12 @@ using .MockData
                 end
                 @testset "should properly set the target price" begin
                     @test new_state.price ≈ v3_reserves_data.target_price rtol=1e-3
+                end
+                @testset "should properly set the out of bound dollar amount" begin
+                    @test new_state.outOfBoundsDollar ≈ v3_reserves_data.dollar_out_of_bound rtol=1e-3
+                end
+                @testset "should properly set the out of bound token amount" begin
+                    @test new_state.outOfBoundsToken ≈ v3_reserves_data.token_out_of_bound rtol=1e-3
                 end
             end
         end
@@ -130,8 +142,6 @@ using .MockData
             end
 
             expected_total_capital = 9312.28
-
-            @show total_capitals
 
             @testset "should return solved total capitals" begin
                 @test total_capitals[1] ≈ expected_total_capital rtol=1e-4
